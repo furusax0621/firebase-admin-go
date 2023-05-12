@@ -1264,6 +1264,44 @@ func TestSendWithCustomEndpoint(t *testing.T) {
 	}
 }
 
+func TestSendWithCustomEndpointWithSuffix(t *testing.T) {
+	var tr *http.Request
+	var b []byte
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		tr = r
+		b, _ = ioutil.ReadAll(r.Body)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte("{ \"name\":\"" + testMessageID + "\" }"))
+	}))
+	defer ts.Close()
+
+	ctx := context.Background()
+
+	conf := *testMessagingConfig
+	tsURL := ts.URL + "/"
+	optEndpoint := option.WithEndpoint(tsURL)
+	conf.Opts = append(conf.Opts, optEndpoint)
+
+	client, err := NewClient(ctx, &conf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if fcmEndpoint := client.fcmEndpoint.String(); tsURL != fcmEndpoint {
+		t.Errorf("client.fcmEndpoint = %q; want = %q", fcmEndpoint, tsURL)
+	}
+
+	for _, tc := range validMessages {
+		t.Run(tc.name, func(t *testing.T) {
+			name, err := client.Send(ctx, tc.req)
+			if name != testMessageID || err != nil {
+				t.Errorf("Send(%s) = (%q, %v); want = (%q, nil)", tc.name, name, err, testMessageID)
+			}
+			checkFCMRequest(t, b, tr, tc.want, false)
+		})
+	}
+}
+
 func TestSendDryRun(t *testing.T) {
 	var tr *http.Request
 	var b []byte
