@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"reflect"
 	"testing"
 	"time"
@@ -1209,7 +1210,11 @@ func TestSend(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client.fcmEndpoint = ts.URL
+	endpointURL, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.fcmEndpoint = endpointURL
 
 	for _, tc := range validMessages {
 		t.Run(tc.name, func(t *testing.T) {
@@ -1244,8 +1249,8 @@ func TestSendWithCustomEndpoint(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if ts.URL != client.fcmEndpoint {
-		t.Errorf("client.fcmEndpoint = %q; want = %q", client.fcmEndpoint, ts.URL)
+	if fcmEndpoint := client.fcmEndpoint.String(); ts.URL != fcmEndpoint {
+		t.Errorf("client.fcmEndpoint = %q; want = %q", fcmEndpoint, ts.URL)
 	}
 
 	for _, tc := range validMessages {
@@ -1275,7 +1280,11 @@ func TestSendDryRun(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client.fcmEndpoint = ts.URL
+	endpointURL, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.fcmEndpoint = endpointURL
 
 	for _, tc := range validMessages {
 		t.Run(tc.name, func(t *testing.T) {
@@ -1302,7 +1311,11 @@ func TestSendError(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client.fcmEndpoint = ts.URL
+	endpointURL, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.fcmEndpoint = endpointURL
 	client.fcmClient.httpClient.RetryConfig = nil
 
 	for idx, tc := range httpErrors {

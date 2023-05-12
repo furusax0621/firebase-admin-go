@@ -22,6 +22,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
@@ -874,21 +876,26 @@ func NewClient(ctx context.Context, c *internal.MessagingConfig) (*Client, error
 		batchEndpoint = defaultBatchEndpoint
 	}
 
+	messagingEndpointURL, err := url.Parse(messagingEndpoint)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Client{
-		fcmClient: newFCMClient(hc, c, messagingEndpoint, batchEndpoint),
+		fcmClient: newFCMClient(hc, c, messagingEndpointURL, batchEndpoint),
 		iidClient: newIIDClient(hc),
 	}, nil
 }
 
 type fcmClient struct {
-	fcmEndpoint   string
+	fcmEndpoint   *url.URL
 	batchEndpoint string
 	project       string
 	version       string
 	httpClient    *internal.HTTPClient
 }
 
-func newFCMClient(hc *http.Client, conf *internal.MessagingConfig, messagingEndpoint string, batchEndpoint string) *fcmClient {
+func newFCMClient(hc *http.Client, conf *internal.MessagingConfig, messagingEndpoint *url.URL, batchEndpoint string) *fcmClient {
 	client := internal.WithDefaultRetryConfig(hc)
 	client.CreateErrFn = handleFCMError
 
@@ -935,10 +942,12 @@ func (c *fcmClient) makeSendRequest(ctx context.Context, req *fcmRequest) (strin
 	if err := validateMessage(req.Message); err != nil {
 		return "", err
 	}
+	endpoint := *c.fcmEndpoint
+	endpoint.Path = path.Join(endpoint.Path, "projects", c.project, "messages:send")
 
 	request := &internal.Request{
 		Method: http.MethodPost,
-		URL:    fmt.Sprintf("%s/projects/%s/messages:send", c.fcmEndpoint, c.project),
+		URL:    endpoint.String(),
 		Body:   internal.NewJSONEntity(req),
 	}
 

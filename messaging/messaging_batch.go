@@ -27,6 +27,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
+	"path"
 	"sync"
 
 	"firebase.google.com/go/v4/internal"
@@ -335,7 +336,9 @@ type multipartEntity struct {
 }
 
 func (c *fcmClient) newBatchRequest(messages []*Message, dryRun bool) (*internal.Request, error) {
-	url := fmt.Sprintf("%s/projects/%s/messages:send", c.fcmEndpoint, c.project)
+	endpoint := *c.fcmEndpoint
+	endpoint.Path = path.Join(endpoint.Path, "projects", c.project, "messages:send")
+	url := endpoint.String()
 	headers := map[string]string{
 		apiFormatVersionHeader: apiFormatVersion,
 		firebaseClientHeader:   c.version,

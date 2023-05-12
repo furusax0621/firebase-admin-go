@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/textproto"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -233,7 +234,11 @@ func TestSendEach(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client.fcmEndpoint = ts.URL
+	endpointURL, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.fcmEndpoint = endpointURL
 
 	br, err := client.SendEach(ctx, testMessages)
 	if err != nil {
@@ -261,7 +266,11 @@ func TestSendEachDryRun(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client.fcmEndpoint = ts.URL
+	endpointURL, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.fcmEndpoint = endpointURL
 
 	br, err := client.SendEachDryRun(ctx, testMessages)
 	if err != nil {
@@ -305,7 +314,11 @@ func TestSendEachPartialFailure(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client.fcmEndpoint = ts.URL
+	endpointURL, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.fcmEndpoint = endpointURL
 
 	for idx, tc := range httpErrors {
 		failures = []string{tc.resp}
@@ -335,7 +348,11 @@ func TestSendEachTotalFailure(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client.fcmEndpoint = ts.URL
+	endpointURL, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.fcmEndpoint = endpointURL
 	client.fcmClient.httpClient.RetryConfig = nil
 
 	for idx, tc := range httpErrors {
@@ -450,7 +467,11 @@ func TestSendEachForMulticast(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client.fcmEndpoint = ts.URL
+	endpointURL, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.fcmEndpoint = endpointURL
 
 	br, err := client.SendEachForMulticast(ctx, testMulticastMessage)
 	if err != nil {
@@ -485,8 +506,8 @@ func TestSendEachForMulticastWithCustomEndpoint(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if ts.URL != client.fcmEndpoint {
-		t.Errorf("client.fcmEndpoint = %q; want = %q", client.fcmEndpoint, ts.URL)
+	if fcmEndpoint := client.fcmEndpoint.String(); ts.URL != fcmEndpoint {
+		t.Errorf("client.fcmEndpoint = %q; want = %q", fcmEndpoint, ts.URL)
 	}
 
 	br, err := client.SendEachForMulticast(ctx, testMulticastMessage)
@@ -511,7 +532,11 @@ func TestSendEachForMulticastDryRun(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client.fcmEndpoint = ts.URL
+	endpointURL, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.fcmEndpoint = endpointURL
 
 	br, err := client.SendEachForMulticastDryRun(ctx, testMulticastMessage)
 	if err != nil {
@@ -555,7 +580,11 @@ func TestSendEachForMulticastPartialFailure(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client.fcmEndpoint = ts.URL
+	endpointURL, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.fcmEndpoint = endpointURL
 
 	for idx, tc := range httpErrors {
 		failures = []string{tc.resp}
